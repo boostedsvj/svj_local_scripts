@@ -9,7 +9,8 @@ import svj_ntuple_processing as svj
 
 def process_directory(tup):
     directory, dst = tup
-    npzfiles = glob.glob(directory + '/*.npz')
+    #print(dst, '*'*5, directory)
+    npzfiles = glob.glob(directory + '*.npz')
     logger.info('Processing %s -> %s (%s files)', directory, dst, len(npzfiles))
     # try:
     cols = []
@@ -29,6 +30,10 @@ def dst(stageout, directory):
         stageout, osp.basename(osp.dirname(directory)), osp.basename(directory) + '.npz'
         )
 
+'''def dst(stageout, directory):
+    #return osp.join(stageout, osp.basename(osp.dirname(directory)))
+    return osp.basename(osp.dirname(directory)) + '.npz'''
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -43,11 +48,17 @@ if __name__ == '__main__':
 
     fn_args = []
     for d in directories:
-        outfile = dst(args.dst, d)
-        if seutils.isfile(outfile):
+        #print('directory is: ', d, ' stageout: ', args.dst)
+        #print(args.dst)
+        #outfile = dst(args.dst, d)
+        outfile = osp.join(osp.basename(osp.dirname(d))+'.npz')
+        #print('*'*5, ' the outfile is: ', outfile)
+        '''if seutils.isfile(outfile):
             logger.info('File %s exists; skipping %s', outfile, d)
-            continue
+            continue'''
         fn_args.append((d, outfile))
+        #print(fn_args)
+        
 
     import multiprocessing as mp
     p = mp.Pool(args.nthreads)

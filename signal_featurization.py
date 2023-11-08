@@ -3,7 +3,8 @@ import seutils
 
 from hadd import expand_wildcards, logger
 import svj_ntuple_processing as svj
-
+#import "github.com/parnurzeal/gorequest"
+#import https://github.com/boostedsvj/svj_ntuple_processing/blob/main/svj_ntuple_processing as svj
 
 def metadata_from_path(path):
     meta = {}
@@ -15,7 +16,7 @@ def metadata_from_path(path):
     else:
         meta['year'] = 2018
 
-    match = re.search(r'madpt(\d+)', path)
+    match = re.search(r'MADPT(\d+)', path)
     if match:
         meta['madpt'] = int(match.group(1))
 
@@ -23,15 +24,15 @@ def metadata_from_path(path):
     if match:
         meta['genjetpt'] = int(match.group(1))
 
-    match = re.search(r'mz(\d+)', path)
+    match = re.search(r'mMed-(\d+)', path)
     if match:
         meta['mz'] = int(match.group(1))
 
-    match = re.search(r'mdark(\d+)', path)
+    match = re.search(r'mDark-(\d+)', path)
     if match:
         meta['mdark'] = int(match.group(1))
 
-    match = re.search(r'rinv([\d\.]+)', path)
+    match = re.search(r'rinv-([\d\.]+)', path)
     if match:
         meta['rinv'] = float('.'.join(match.group(1).split('.')[:2]))
 
@@ -40,12 +41,21 @@ def metadata_from_path(path):
 
 def process_rootfile(tup):
     rootfile, dst, do_zprime_in_cone = tup
-    array = svj.open_root(rootfile)
+    array = svj.open_root(rootfile)#,load_gen=True)
     array.metadata = metadata_from_path(rootfile)
-    array = svj.filter_preselection(array)
+    print(array.metadata)
+    #array = svj.filter_preselection(array)
     if do_zprime_in_cone:
         array = svj.filter_zprime_in_cone(array)
         array.metadata['zprimecone'] = True
+    #array = svj.filter_at_least_n_muons(array,n=1)
+    #array = svj.filter_girthDDT(array)
+    array = svj.filter_stitch(array)
+    #to make the N-1 plots
+    array = svj.selection_plots(array)
+    #to make cutflowtable with ordered cuts:
+    #array = svj.filter_preselection_ordered(array)
+    #array = svj.filter_preselection(array)
     cols = svj.bdt_feature_columns(array)
     cols.save(dst)
 
@@ -73,8 +83,6 @@ def main():
     p.map(process_rootfile, fn_args)
     p.close()
     p.join()
-
-
 
 
 if __name__ == '__main__':
